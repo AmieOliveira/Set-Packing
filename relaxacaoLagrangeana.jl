@@ -20,8 +20,7 @@ for j in L
 end
 #println(a)
 
-global m, n, P, L, a, c
-
+# global m, n, P, L, a, c
 
 
 function subproblema_lagrangeano(u)
@@ -58,7 +57,7 @@ function subproblema_lagrangeano(u)
     end
 
     # z = sum(c[j]*x[j] for j in L) + sum( u[i]*( 1 - sum(a[i,j]*x[j] for j in L) ) for i in P)
-    z = sum(c_l[j]*x[j] for j in P) + sum(u[i] for i in P)
+    z = sum(c_l[j]*x[j] for j in L) + sum(u[i] for i in P)
 
     return z, x, s
 end
@@ -90,7 +89,7 @@ function limite_inferior(custos, x_dual=[])
     # consequentemente, nenhuma é violada)
 
     for j in idxs
-        tmp = zeros(m)
+        tmp = zeros(Int64, m)
 
         viavel = true
         for i in P
@@ -170,10 +169,12 @@ function lagrangeana()
             k_best = k
             println("k_best: ", k_best)
             println("Novo z_up: ", z_u_best, " (", x_u_best, ")")
+            println("Multiplicadores: ", u)
+            println("Valor de pi: ", p_i)
         end
         
         # Atualizando o limite limite_inferior
-        if (k%trunc(Int64, maxIter/10) == 0) && (k ≠ 0)
+        #if (k%trunc(Int64, maxIter/10) == 0) && (k ≠ 0)
             custo = zeros(n)
             x_dual = []
             if limInfType == "default"
@@ -196,7 +197,7 @@ function lagrangeana()
                 x_best = x_low # NOTE: Prestar atencao, pq se x_up mudar x_best tb vai mudar
                 println("Atualizado z_low: ", z_l_best, " (", x_best, ")")
             end
-        end
+        #end
 
         # Condições de otimalidade
         if z_u_best - z_l_best < 1
@@ -212,7 +213,7 @@ function lagrangeana()
         if k - k_best == trunc(Int64, maxIter/20)
             p_i = p_i/2
             k_best = k
-            #println("Atualizado pi (k=", k,")")
+            println("Atualizado pi (k=", k,")")
             
             if p_i < 0.0001
                 println("Parando por pi pequeno")
@@ -221,9 +222,19 @@ function lagrangeana()
         end
 
         # Atualizando o tamanho do passo e os multiplicadores de lagrange
-        t = p_i*(z_u_best - z_l_best)/sum(s.^2)
+        sqrSum = 0
+        for i in P
+            s[i] = 1 - sum(a[i,j]*x_up[j] for j in L)
+            sqrSum += s[i]^2
+        end
+        t = p_i*(z_u - z_low)/sqrSum
+        if t < 0.0001
+            println("Parando por t pequeno")
+            break
+        end
+
         for j in L
-            u[j] = max(0, u[j] - t*(1+eps)*s[j]) # NOTE: Verificar!!! Se for a direcao oposta a de melhora mesmo, tem que ser menos
+            u[j] = max(0, u[j] - t*s[j]) # NOTE: Verificar!!! Se for a direcao oposta a de melhora mesmo, tem que ser menos
         end
 
         #println("Novos multiplicadores: ", u)
