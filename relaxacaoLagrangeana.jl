@@ -20,6 +20,8 @@ for j in L
 end
 #println(a)
 
+global m, n, P, L, a, c
+
 
 
 function subproblema_lagrangeano(u)
@@ -177,9 +179,13 @@ function lagrangeana()
             if limInfType == "default"
                 for j in L
                     custo[j] = c[j] - sum(a[i,j]*u[i] for i in P)
+                    custo[j] = custo[j]/(sum(a[i,j] for i in P))
                 end
             elseif limInfType == "complementares"
                 custo = c
+                for j in L
+                    custo[j] = custo[j]/(sum(a[i,j] for i in P))
+                end
                 x_dual = x_up
             end
             z_low, x_low = limite_inferior(custo, x_dual)
