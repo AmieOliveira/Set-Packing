@@ -1,6 +1,7 @@
 using JuMP, Gurobi, DelimitedFiles
 
-path = "inst.txt"
+#path = "inst.txt"
+path = "toy3.txt"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -64,7 +65,7 @@ end
 
 function limite_inferior(custos, x_dual=[])
     # Retorna o z_low e o x_low
-    x = zeros(m)
+    x = zeros(n)
 
     # Organizar elementos com relação aos pesos
     idxs = sortperm(custos)
@@ -233,8 +234,8 @@ function lagrangeana()
             break
         end
 
-        for j in L
-            u[j] = max(0, u[j] - t*s[j]) # NOTE: Verificar!!! Se for a direcao oposta a de melhora mesmo, tem que ser menos
+        for i in P
+            u[i] = max(0, u[i] - t*s[i]) # NOTE: Verificar!!! Se for a direcao oposta a de melhora mesmo, tem que ser menos
         end
 
         #println("Novos multiplicadores: ", u)
