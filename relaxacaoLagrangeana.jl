@@ -21,46 +21,42 @@ for j in L
 end
 #println(a)
 
-# global m, n, P, L, a, c
-
 
 function subproblema_lagrangeano(u)
-    # Retorna: z(u), x_up e s
-    #ml = Model(Gurobi.Optimizer)
-    #@variable(ml, x[j in L], Bin)
-    #@objective(ml, Max, sum(c[j]*x[j] for j in L) + sum( u[i]*( 1 - sum(a[i,j]*x[j] for j in L) ) for i in P) )
-    #optimize!(ml)
-    #return objective_value(ml), value.(x), s
-
-    x = zeros(n)
-    cl_MaxIdx = 1
-
-    c_l = zeros(n)
+    x = zeros(Int64, n)
+    
+    z = 0
+    maxCl = -99999
+    maxClIdx = 0
 
     for j in L
-        c_l[j] = c[j] - sum(a[i,j]*u[i] for i in P)
-
-        if c_l[j] > 0 
+        tmp = c[j] - sum(a[i,j]*u[i] for i in P)
+        if tmp > 0
             x[j] = 1
+            z = z + tmp
         end
-
-        if c_l[j] > c_l[cl_MaxIdx]
-            cl_MaxIdx = j
+        if maxCl < tmp
+            maxCl = tmp
+            maxClIdx = j
         end
     end
-    if c_l[cl_MaxIdx] < 0
-        x[cl_MaxIdx] = 1
+    if maxCl < 0
+        x[maxClIdx] = 1
+        println("INTERFERÊNCIA!!")
     end
 
-    s = zeros(m)
-    for i in P
-        s[i] = 1 - sum(a[i,j]*x[j] for j in L)
+    for i ∈ P
+        z = z + u[i]
     end
 
     # z = sum(c[j]*x[j] for j in L) + sum( u[i]*( 1 - sum(a[i,j]*x[j] for j in L) ) for i in P)
-    z = sum(c_l[j]*x[j] for j in L) + sum(u[i] for i in P)
+    # z = sum(c_l[j]*x[j] for j in L) + sum(u[i] for i in P)
 
-    return z, x, s
+    println("")
+    println("Resultado da relaxação: ", z, " (", x, ")")
+    println("Multiplicadores: ", u)
+
+    return z, x
 end
 
 function limite_inferior(custos, x_dual=[])
@@ -139,18 +135,19 @@ end
 # Algoritmo de otimização lagrangeana
 
 function lagrangeana()
-    k = 0
-    maxIter = 1000
+    maxIter = 100
     p_i = 2
     u = zeros(m)
 
     eps = 0.1
+    pi_min = 0.0001
 
     z_low, x_low = limite_inferior(c)
 
     z_u_best = 9999999
     x_u_best = zeros(n)
     k_best = 0
+    improve = 0
 
     z_l_best = z_low
     x_best = x_low
@@ -158,9 +155,9 @@ function lagrangeana()
     limInfType = "default"  # Pode ser "complementares" # NAO TESTADO
 
 
-    while k < maxIter
+    for k ∈ 1:maxIter
         # Resolução do subproblema lagrangeano
-        z_u, x_up, s = subproblema_lagrangeano(u)
+        z_u, x_up = subproblema_lagrangeano(u)
         #println("Limite dual: ", z_u, "(", x_up, ")")
 
         # Verificando se houve melhora
@@ -168,10 +165,13 @@ function lagrangeana()
             z_u_best = z_u
             x_u_best = x_up
             k_best = k
+            improve = 0
             println("k_best: ", k_best)
             println("Novo z_up: ", z_u_best, " (", x_u_best, ")")
             println("Multiplicadores: ", u)
             println("Valor de pi: ", p_i)
+        else
+            improve += 1
         end
         
         # Atualizando o limite limite_inferior
@@ -202,35 +202,38 @@ function lagrangeana()
 
         # Condições de otimalidade
         if z_u_best - z_l_best < 1
-            println("Parando por otimalidade (z_up == z_low)")
+            println("Parando por otimalidade (z_up == z_low) - iteração ", k)
             break   # (z = z_low)
         end
         if check(x_up, u)
-            println("Parando por otimalidade (x_up é ótimo)")
+            println("Parando por otimalidade (x_up é ótimo) - iteração ", k)
+            z_l_best = z_u
+            x_best = x_up
             break
         end
 
         # Reduzindo do p_i
-        if k - k_best == trunc(Int64, maxIter/20)
+        if improve >= maxIter/20
             p_i = p_i/2
-            k_best = k
+            improve = 0
             println("Atualizado pi (k=", k,")")
             
-            if p_i < 0.0001
-                println("Parando por pi pequeno")
+            if p_i < pi_min
+                println("Parando por pi pequeno (iteração ", k, ")")
                 break   # Programa nao consegue otimizar mais
             end
         end
 
         # Atualizando o tamanho do passo e os multiplicadores de lagrange
+        s = zeros(m)
         sqrSum = 0
         for i in P
             s[i] = 1 - sum(a[i,j]*x_up[j] for j in L)
             sqrSum += s[i]^2
         end
         t = p_i*(z_u - z_low)/sqrSum
-        if t < 0.0001
-            println("Parando por t pequeno")
+        if t < pi_min
+            println("Parando por t pequeno (iteração ", k, ")")
             break
         end
 
@@ -242,12 +245,9 @@ function lagrangeana()
         #println(s)
         #println("")
 
-        k = k + 1
     end
 
-    println("Iteração: ", k)
-
-    return z_l_best, x_best
+    return z_l_best, x_best#, z_u_best
 end
 
 
