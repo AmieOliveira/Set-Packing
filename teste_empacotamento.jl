@@ -29,7 +29,9 @@ optimize!(leilao)
 
 function print_resultado()
     for j in L
-        println("Lance ", j, ": ", value(x[j]))
+        if value(x[j]) == 1
+            println("Lance ", j, ": ", value(x[j]))
+        end
     end
     println("Valor total das vendas: ", objective_value(leilao))
 end

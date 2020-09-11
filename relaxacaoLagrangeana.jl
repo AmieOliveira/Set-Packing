@@ -1,7 +1,7 @@
 using JuMP, Gurobi, DelimitedFiles
 
-#path = "inst.txt"
-path = "toy3.txt"
+#path = "Instâncias/inst.txt"
+path = "Instâncias/pb_100rnd0100.txt"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -52,9 +52,9 @@ function subproblema_lagrangeano(u)
     # z = sum(c[j]*x[j] for j in L) + sum( u[i]*( 1 - sum(a[i,j]*x[j] for j in L) ) for i in P)
     # z = sum(c_l[j]*x[j] for j in L) + sum(u[i] for i in P)
 
-    println("")
-    println("Resultado da relaxação: ", z, " (", x, ")")
-    println("Multiplicadores: ", u)
+    #println("")
+    #println("Resultado da relaxação: ", z, " (", x, ")")
+    #println("Multiplicadores: ", u)
 
     return z, x
 end
@@ -135,7 +135,7 @@ end
 # Algoritmo de otimização lagrangeana
 
 function lagrangeana()
-    maxIter = 100
+    maxIter = 1000
     p_i = 2
     u = zeros(m)
 
@@ -167,9 +167,9 @@ function lagrangeana()
             k_best = k
             improve = 0
             println("k_best: ", k_best)
-            println("Novo z_up: ", z_u_best, " (", x_u_best, ")")
-            println("Multiplicadores: ", u)
-            println("Valor de pi: ", p_i)
+            println("Novo z_up: ", z_u_best)#, " (", x_u_best, ")")
+            #println("Multiplicadores: ", u)
+            #println("Valor de pi: ", p_i)
         else
             improve += 1
         end
@@ -196,7 +196,7 @@ function lagrangeana()
             if z_low > z_l_best
                 z_l_best = z_low
                 x_best = x_low # NOTE: Prestar atencao, pq se x_up mudar x_best tb vai mudar
-                println("Atualizado z_low: ", z_l_best, " (", x_best, ")")
+                println("Atualizado z_low: ", z_l_best, " - iteração ", k)#, " (", x_best, ")")
             end
         #end
 
