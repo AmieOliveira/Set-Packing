@@ -13,12 +13,18 @@ a = zeros(Int,m,n)
 c = zeros(n)
 
 for j in L
-    for i in P
-        a[i,j] = readdlm(path)[i+1,j]
-    end
-    c[j] = readdlm(path)[m+2,j]
+    c[j] = readdlm(path)[2,j]
 end
-#println(a)
+
+for i in P
+    nLances = readdlm(path)[2*i+1,1]
+
+    for lance in 1:nLances 
+        j = readdlm(path)[2*i+2,lance]
+        a[i,j] = 1
+    end
+end
+
 
 leilao = Model(Gurobi.Optimizer)
 @variable(leilao, x[j in L] >= 0, Bin)

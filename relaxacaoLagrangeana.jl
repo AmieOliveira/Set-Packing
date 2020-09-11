@@ -1,7 +1,8 @@
 using JuMP, Gurobi, DelimitedFiles
 
 #path = "Instâncias/inst.txt"
-path = "Instâncias/pb_100rnd0100.txt"
+#path = "Instâncias/toy3.txt"
+path = "Instâncias/pb_100rnd0100.dat"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -14,12 +15,17 @@ a = zeros(Int,m,n)
 c = zeros(n)
 
 for j in L
-    for i in P
-        a[i,j] = readdlm(path)[i+1,j]
-    end
-    c[j] = readdlm(path)[m+2,j]
+    c[j] = readdlm(path)[2,j]
 end
-#println(a)
+
+for i in P
+    nLances = readdlm(path)[2*i+1,1]
+
+    for lance in 1:nLances 
+        j = readdlm(path)[2*i+2,lance]
+        a[i,j] = 1
+    end
+end
 
 
 function subproblema_lagrangeano(u)
