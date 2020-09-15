@@ -46,20 +46,24 @@ end
 
 # Bron-Kerbosch Algorithm
 function find_cliques(clique, candidatos, excluidos, output)
-    println("Iniciando funcao: ", clique, candidatos, excluidos)
+    println("Iniciando funcao: ", clique, ", ", candidatos, ", ", excluidos)
     if candidatos == [] && excluidos == []
-        append!(output, [clique])
+        push!(output, clique)
         println("Fechou um clique: ", clique)
+        return
     end
     # TODO: pivô
-    for v ∈ candidatos
-        println(v)
+    for v ∈ candidatos[:] #candidatos
+        println(v, candidatos)
         R2 = clique ∪ [v]
         P2 = candidatos ∩ neighbors[v]
         X2 = excluidos ∩ neighbors[v]
         println("Call for ", R2, ", ", P2, ", ", X2)
         find_cliques(R2, P2, X2, output)
-        candidatos = filter!(e->e!=v, candidatos)
+        filter!(e->e!=v, candidatos)
+        # NOTE: se fosse iterar encima da propria lista candidatos, teria que alterar desta forma:
+        #candidatos = filter(e->e!=v, candidatos) 
+        # Nao altera a lista original, então não estraga os elementos da iteração
         excluidos = excluidos ∪ [v]
         println("New data: ", clique, ", ", candidatos, ", ", excluidos)
     end
