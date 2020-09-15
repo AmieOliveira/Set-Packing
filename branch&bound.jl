@@ -1,7 +1,7 @@
 using JuMP, Gurobi, DelimitedFiles, MathProgBase
 
-path = "Instâncias/inst.txt"
-#path = "Instâncias/pb_100rnd0100.dat"
+#path = "Instâncias/inst.txt"
+path = "Instâncias/pb_100rnd0100.dat"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
