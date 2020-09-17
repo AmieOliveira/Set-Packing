@@ -1,7 +1,7 @@
 using JuMP, Gurobi, DelimitedFiles, MathProgBase
 
-path = "Instâncias/toy2.txt"
-#path = "Instâncias/pb_100rnd0100.dat"
+#path = "Instâncias/inst.txt"
+path = "Instâncias/pb_100rnd0100.dat"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -66,12 +66,60 @@ function find_cliques(clique, candidatos, excluidos, output)
 end
 
 
-clique = Int64[]
+
+# Relação dos cliques do grafo de conflito
+clique = Int32[]
 excluidos = Int64[]
 candidatos = Array(L)
-
-out = Array{Int64}[]
+out = Array{Int32}[]
 
 find_cliques(clique, candidatos, excluidos, out)
 
 println(out)
+
+
+# Algoritmo de corte
+function callbacks(cb_data, cb_where)
+    # if cb_where ≠ CB_MESSAGE    # Não está imprimindo mensagem de log
+    #     println("ONDE ESTOU: ", cb_where)
+    # end
+    if cb_where == CB_MIPNODE
+        eps = 0.0001
+        println("**** Novo nó! ****");
+        println("Nó: ", cbget_mipnode_nodcnt(cb_data, cb_where))
+        status = cbget_mipnode_status(cb_data, cb_where)
+        if status == 2 #optimal
+            x_val = cbget_mipnode_rel(cb_data, cb_where)
+            println(x_val)
+
+            for cliq ∈ out
+                soma = 0
+                for j ∈ cliq
+                    soma += x_val[j]
+                end
+                if soma > 1 + eps
+                    # Essa restrição foi violada
+                    println("Restrição violada!! Clique: ", cliq)
+                    val = ones(length(cliq))
+                    cbcut(cb_data, cliq, val, '<', 1.0+eps)
+                end
+            end
+        end
+    end
+end
+
+
+# Modelo do problema
+leilao = Model(
+    optimizer_with_attributes(
+        Gurobi.Optimizer, "PreCrush" => 1, "Cuts" => 0, "Presolve" => 0, "Heuristics" => 0.0
+        )
+)
+@variable(leilao, x[j in L] >= 0, Bin)
+@constraint(leilao, disponibilidade[i in P], sum(a[i,j]*x[j] for j in L) <= 1)
+@objective(leilao, Max, sum(c[j]*x[j] for j in L))
+
+MOI.set(leilao, Gurobi.CallbackFunction(), callbacks)
+
+optimize!(leilao)
+
