@@ -66,28 +66,32 @@
 	
 	
 	\begin{abstract}
-	    Neste trabalho, descrevemos o problema dos leilões combinatórios como uma aplicação do \textsc{problema de empacotamento de conjuntos}, um conhecido problema proposto por Karp \cite{Karp}. Aplicamos três algoritmos exatos para a resolução do mesmo através do solver \emph{Gurobi}, utilizando a linguagem de programação \emph{Julia} e biblioteca \emph{JuMP} que nos fornece muitas ferramentas úteis para a resolução de problemas de otimização. Utilizamos duas bases de dados com instâncias de diferentes tamanhos e comparamos os resultados obtidos por cada um dos métodos exatos que descrevemos aqui, sendo estes: uma relaxação lagrangeana, um algoritmo \emph{branch and bound} e um algoritmo \emph{branch and cut}.    
-	 \end{abstract}
-	
+	    Neste trabalho, descrevemos o problema dos leilões combinatórios como uma aplicação do \textsc{Problema de Empacotamento de Conjuntos}, {\color{red} primeiramente} proposto por Karp \cite{Karp}. Aplicamos três algoritmos exatos para a resolução do mesmo: {\color{red} \textbf{Relaxação Lagrangeana}, \textbf{Branch-and-Bound} e \textbf{Branch-and-Cut}. Os mesmos foram implementados} através do solver \emph{Gurobi}, utilizando a linguagem de programação \emph{Julia} e biblioteca \emph{JuMP}. Utilizamos {\color{red} deferentes instâncias para comparar o desempenho dos algoritmos, obtendo ...} \todo{Colocar algum resultado de interesse} 
+	\end{abstract}
+	\newpage
 	
 	
 	\section{Introdução}
-	A otimização combinatória representa uma área da ciência da computação e de matemática aplicada que estuda problemas de otimização em conjuntos finitos. Os problemas de otimização são aquelas onde se procura determinar valores extremos de um conjunto de restrições, com respeito a uma função, esta chamada de função objetivo. As variáveis envolvidas nos problemas de otimização são denominadas variáveis de decisão. Quando falamos destas variáveis, podemos dividir os problemas de otimização em duas categorias: problemas onde as variáveis são lineares e problemas onde elas são não lineares. E ainda podemos fazer mais uma distinção quanto aos problemas de otimização combinatória que estamos lidando, e esta distinção é através dos valores que as variáveis podem assumir. Podemos ter problemas onde as variáveis podem assumir valores reais, inteiros, binários ou ainda um misto destas classificações.
+	A otimização combinatória é a área que estuda problemas de otimização aplicados a conjuntos discretos. Os problemas de otimização são aqueles onde se procura determinar valores extremos de um conjunto de restrições, com respeito a uma função, esta chamada de função objetivo. As variáveis envolvidas nos problemas de otimização são denominadas variáveis de decisão. {\color{red} Pode-se classificar os problemas de otimização combinatória de acordo com os tipos de variáveis que os compõem: variáveis lineares ou não lineares; variáveis binárias, inteiras ou reais}.
+	%Quando falamos destas variáveis, podemos dividir os problemas de otimização em duas categorias: problemas onde as variáveis são lineares e problemas onde elas são não-lineares. E ainda podemos fazer mais uma distinção quanto aos problemas de otimização combinatória que estamos lidando, e esta distinção é através dos valores que as variáveis podem assumir. Podemos ter problemas onde as variáveis podem assumir valores reais, inteiros, binários ou ainda um misto destas classificações.
 	
-	Neste trabalho, definimos e aplicamos técnicas de soluções exatas para um conhecido problema, onde as variáveis são lineares e podem assumir valores binários 0-1. Este problema é o \textsc{problema de empacotamento de conjuntos}. Mais especificamente, sua versão de otimização.
-	O problema consiste em: dado um cojunto finito $I$ de $n$ elementos e um conjunto finito $J$ de $m$ elementos, desejamos obter o conjunto $I_j$ dos subcojuntos viáveis (a cada um destes subconjuntos é associado um peso $c_j$) de $I$ com o maior peso possível. Vamos definir de maneira mais formal, detalhar o problema e sua formulação em uma seção mais adiante.
+	{\color{red}
+	Neste trabalho, definimos e aplicamos técnicas de soluções exatas para um conhecido problema, o \textsc{Problema de Empacotamento de Conjuntos (PEC)}.
+	% Mais especificamente, sua versão de otimização.
+	Ele consiste em encontrar uma combinação de subconjuntos de elementos de forma que se obtenha peso máximo e que nenhum elemento seja selecionado por mais de um conjunto. Pode ser descrito como um problema de programação inteira onde as variáveis são lineares e podem assumir valores binários 0-1.
+	%: dado um cojunto finito $I$ de $n$ elementos e um conjunto finito $J$ de $m$ elementos, desejamos obter o conjunto $I_j$ dos subcojuntos viáveis (a cada um destes subconjuntos é associado um peso $c_j$) de $I$ com o maior peso possível. Vamos definir de maneira mais formal, detalhar o problema e sua formulação em uma seção mais adiante.
+	}
 	
-	Este problema possui muita aplicação prática e uma das mais conhecidas é a de Leilões Combinatórias que é abordagem que fazemos neste trabalho. Um leilão combinatório consiste em distribuir um número $m$ de produtos através de $n$ lances. Se um lance é escolhido, um determinado lucro é obtido. O objetivo em um leilão combinatório é maximizar o lucro total respeitando a condição de que cada produto só pode estar contido em no máximo um lance. Utilizando esta aplicação do \textsc{problema do empacotamento de conjuntos}, utilizamos três métodos exatos para resolver o problema: uma relaxação lagrangeana, um algoritmo \emph{branch and bound} e um segundo algoritmo \emph{branch and bound} com algoritmos de planos de corte associados ao mesmo, denominado \emph{branch and cut}.
+	Este problema possui muita aplicação prática e uma das mais conhecidas é a de Leilões Combinatórias que é abordagem que fazemos neste trabalho. Um leilão combinatório consiste em distribuir um número $m$ de produtos através de $n$ lances. Se um lance é escolhido, um determinado lucro é obtido. O objetivo em um leilão combinatório é maximizar o lucro total respeitando a condição de que cada produto só pode estar contido em no máximo um lance. Utilizando esta aplicação do {\color{red} PEC}, utilizamos três métodos exatos para resolver o problema: uma \textbf{Relaxação Lagrangeana}, um algoritmo \textbf{Branch-and-Bound} e um segundo algoritmo \textbf{Branch-and-Bound} com algoritmos de planos de corte associados ao mesmo, denominado \textbf{Branch-and-Cut}.
 	
-	Esse texto está organizado da seguinte forma: na seção~\ref{sec:prob}, detalhamos o \textsc{problema de empacotamento de conjuntos}, na seção~\ref{sec:caso} exibimos um caso base do problema e nas seções \ref{sec:relag}, \ref{sec:BB} e~\ref{sec:BC} descrevemos um pouco cada método aplicado e por fim nas seções~\ref{sec:res} e~\ref{sec:disc} exibimos os resultados obtidos e a comparação entre os mesmos e por fim, na seção~\ref{sec:concl} nossas conclusões e ideias para trabalhos futuros.
+	Esse texto está organizado da seguinte forma: na seção~\ref{sec:prob}, detalhamos o \textsc{Problema de Empacotamento de Conjuntos}, e nas seções \ref{sec:relag}, \ref{sec:BB} e~\ref{sec:BC} descrevemos um pouco cada método aplicado. Nas seções~\ref{sec:res} e~\ref{sec:disc} exibimos os resultados obtidos e a comparação entre os métodos e, por fim, na seção~\ref{sec:concl} nossas conclusões e ideias para trabalhos futuros.
 	
 	
 	\section{O Problema de Empacotamento de Conjuntos}\label{sec:prob}
-	O \textsc{problema de empacotamento de conjuntos} (do inglês, Set-Packing Problem) foi um dos 21 problemas enunciados por Karp em \cite{Karp}. Neste mesmo trabalho, Karp mostrou que se trata de um problema \NP-completo através de uma redução feita do \textsc{problema da clique máxima de um grafo}. O \textsc{problema de empacotamento de conjuntos} também possui forte relação com o \textsc{problema da cobertura de conjuntos}, problema este que é o dual do problema aqui tratado.
+	O \textsc{problema de empacotamento de conjuntos} (PEC) (do inglês, \emph{Set-Packing Problem}) foi um dos 21 problemas enunciados por Karp em \cite{Karp}. Neste mesmo trabalho, Karp mostrou que se trata de um problema \NP-completo através de uma redução feita do {\color{red} problema da clique máxima de um grafo}. O PEC também possui forte relação com o {\color{red} problema da cobertura de conjuntos}, {\color{red} sendo eles duais entre si}.\todo{Dual-forte ou dual-fraco?}
 	
-	A versão de decisão consiste em determinar, dado um inteiro $k$, se existe um conjunto com $k$ subconjuntos do conjunto de subconjuntos viáveis $I_j$. Porém, neste trabaho, abordamos a versão de otimização, descrita a seguir.
-	
-	A descrição formal do problema é dada da seguinte forma:
+	{\color{red} O PEC pode ser descrito pelo ponto de vista da decisão, que} consiste em determinar, dado um inteiro $k$, se existe um conjunto com $k$ subconjuntos do conjunto de subconjuntos viáveis $I_j$. \todo{Colocar referência???}
+	Porém neste trabalho abordamos a versão de otimização, {\color{red} cuja} descrição formal é dada da seguinte forma:
 	
 	\begin{itemize}
 	    \item[-] $I$ = \{1, ..., m\}: conjunto finito de elementos
@@ -104,28 +108,45 @@
 	\end{itemize}
 	
 	
-	Por fim, sua formulação como um problema de programação inteira é:
+	Dadas estas definições, sua formulação como um problema de programação inteira está dada pela equação \ref{eq:PEC-prof}.
 	
-	\begin{equation*}
+	\begin{equation}
+		\label{eq:PEC-prof}
         \begin{array}{ll@{}ll}
             \text{max}  & \displaystyle\sum\limits_{j \in J} c_{j}&x_{j} &\\
             \text{sujeito a}& \displaystyle\sum\limits_{j \in J_i}   &x_{j} \leq 1,  &i \in I\\
                  &                                                &x_{j} \in \{0,1\}, &j \in J
         \end{array}
-    \end{equation*}
+    \end{equation}
     
 	Este problema possui uma ampla aplicação prática. Como um exemplo destas, temos o escalonamento de tripulações de companhias aéreas para aviões. Cada avião da frota precisa ter uma tripulação designada a ele, composta por um piloto, copiloto e navegador~\cite{Airline}.    
-    Como mencionado anteriormente, a abordagem que fazemos aqui ao \textsc{problema de empacotamento de conjuntos} é feita no contexto dos leilões combinatórios, que é objeto de estudo de muitos estudiosos em diversos trabalhos (\cite{Winner}, \cite{Taming}, \cite{CABOB}). Nesta aplicação os conjuntos $I$ e $J$ podem ser enxergados como um conjunto de $m$ produtos e um conjunto de $n$ lances, respectivamente. Nosso objetivo então é: maximizar o lucro total obtido sem violar a restrição de que um produto só pode ser escolhido por, no máximo um lance. E este lucro é um valor associado a seleção de cada produto. 
-
-    \todo[inline]{Adicionar nossa forma de aproximação do problema}
+    Como mencionado anteriormente, a abordagem que fazemos aqui ao \textsc{problema de empacotamento de conjuntos} é feita no contexto dos leilões combinatórios, que é objeto de estudo de muitos estudiosos em diversos trabalhos (\cite{Winner}, \cite{Taming}, \cite{CABOB}). Nesta aplicação os conjuntos $I$ e $J$ podem ser enxergados como um conjunto de $m$ produtos e um conjunto de $n$ lances, respectivamente. Nosso objetivo então é maximizar o lucro total obtido sem violar a restrição de que um produto só pode ser escolhido por, no máximo, um lance. E este lucro é um valor associado a seleção de cada {\color{red} lance}. 
+    
+    {\color{red}
+    Para a solução desse problema implementamos uma formulação alternativa, dada pela equação \ref{eq:PEC}, onde $ a_{ij} $ vale $ 1 $ se o lance $ j $ seleciona o produto $ i $, ou $ 0 $ caso contrário.
+    
+    \begin{equation}
+    	\label{eq:PEC}
+    	\begin{array}{ll@{}ll}
+    		\text{max}  & \displaystyle\sum\limits_{j = 0}^{n} c_{j} & x_{j} &\\
+    		\text{sujeito a}& \displaystyle\sum\limits_{j = 0}^{n}   & a_{ij}x_{j} \leq 1,  & i=1,\cdots,m\\
+    		&                                                &x_{j} \in \{0,1\}, & j = 1,\cdots,n
+    	\end{array}
+    \end{equation}
+    
+    Esta formulação foi utilizada por entendermos que a mesma é mais intuitiva. Entretanto, foi observado ao longo da implementação que a formulação dada pela equação \ref{eq:PEC-prof} é mais eficiente para instâncias muito grandes, uma vez que na maioria dos casos as matrizes $ A $ induzidas pela seleção de produtos por lances são esparsas. \todo{Está explicado bem?}
+	}
 	
 	\section{Relaxação Lagrangeana}\label{sec:relag}
-	A relaxação lagrangeana consiste em um método de decomposição das restrições de um determinado problema em dois grupos: as restrições "convenientes" e as restrições "inconvenientes". De tal forma que as restrições "incoveninentes" são retiradas do problema de programação inteira e adicionadas à função objetivo em um termo $u(d - Dx)$. Estas variáveis $u_i$ são denominadas variáveis duais ou multiplicadores de Lagrange.
+	A relaxação lagrangeana consiste em um método de decomposição das restrições de um determinado problema em dois grupos: as restrições \enquote{convenientes} e as restrições \enquote{inconvenientes}. 
+	{\color{red} Chamamos de restrições \enquote{inconvenientes} aquelas que fazem com que o problema se torne difícil de resolver. Dessa forma tais restrições são}
+	retiradas do problema de programação inteira e adicionadas à função objetivo em um termo $u(d - Dx)$. Estas variáveis $u_i$ são denominadas variáveis duais ou multiplicadores de Lagrange.
 	
-	De fato, nem sempre a relaxação lagrangeana nos oferece uma solução ótima para o problema. Porém, mesmo nos casos em que a solução obtida não é ótima, podemos extrair informações interessantes ao interpretar o resultado obtido.
-	O segundo grupo de restrições, as "convenientes" tornam o problema mais fácil de ser resolvido e eventualmente podemos obter a solução ótima para o problema original através da relaxação.
+	Nem sempre a relaxação lagrangeana nos oferece uma solução ótima para o problema. {\color{red} Ela é limitada pelos resultados da relaxação linear.} \todo{Isso está correto?}
+	Porém, mesmo nos casos em que a solução obtida não é ótima, podemos extrair informações interessantes ao interpretar o resultado obtido.
+	O segundo grupo de restrições, as \enquote{convenientes} tornam o problema mais fácil de ser resolvido e eventualmente podemos obter a solução ótima para o problema original através da relaxação.
 	
-	O ponto de partida para a aplicação deste método é a elaboração do subproblema lagrangeano. Baseado no modelo de programação inteira que apresentamos na seção~\ref{sec:prob}, o subproblema lagrangeano para o \textsc{problema de empacotamento de conjuntos} é: 
+	O ponto de partida para a aplicação deste método é a elaboração do subproblema lagrangeano. Baseado no modelo de programação inteira que apresentamos na seção~\ref{sec:prob}, o subproblema lagrangeano para o PEC é: 
 	
 	\begin{equation*}
         \begin{array}{ll@{}ll}
@@ -204,19 +225,17 @@
 	
 	
 	\section{Branch and Bound}\label{sec:BB}
-	Uma técnica muito aplicada para resolução de problemas combinatórios é a técnica de dividir e conquistar que consiste em resolver subproblemas mais fáceis que o original e após este processo combinar as soluções obtidas até obtermos a solução do problema original. Porém, esta enumeração de subproblemas de forma explícita pode ser muito custosa, e justamente neste contexto, é que algoritmo \emph{Branch and Bound} entra em ação.
+	Uma técnica muito aplicada para resolução de problemas combinatórios é a técnica de dividir e conquistar que consiste em resolver subproblemas mais fáceis que o original e após este processo combinar as soluções obtidas até obtermos a solução do problema original. Porém, esta enumeração de subproblemas de forma explícita pode ser muito custosa, e justamente neste contexto, é que algoritmo \emph{Branch-and-Bound} entra em ação.
 	
-	O algoritmo \emph{Branch and Bound} consiste em uma técnica de enumeração implícita de soluções, onde através de limites locais, obtemos limites globais. Toda a eficiência e ganho que o algoritmo \emph{Branch and Bound} nos oferece é por conta das podas que acontecem na árvore de enumeração implícita, que podem ocorrer por: otimalidade, inviabilidade e limites duais. A técnica foi definida primeiramente em~\cite{Land} por Ailsa Land e Alison Doig em 1960, e figura como um dos mais importantes métodos exatos no contexto de resolução de problemas de otimização até os dias atuais.
+	O algoritmo \emph{Branch-and-Bound} consiste em uma técnica de enumeração implícita de soluções, onde através de limites locais, obtemos limites globais. Toda a eficiência e ganho que o algoritmo \emph{Branch-and-Bound} nos oferece é por conta das podas que acontecem na árvore de enumeração implícita, que podem ocorrer por: otimalidade, inviabilidade e limites duais. A técnica foi definida primeiramente em~\cite{Land} por Ailsa Land e Alison Doig em 1960, e figura como um dos mais importantes métodos exatos no contexto de resolução de problemas de otimização até os dias atuais.
 	
 	
 	
 	\section{Branch and Cut}\label{sec:BC}
-	Para fortalecermos ainda mais o algoritmo \emph{Branch and Bound}, é possível utilizarmos de algoritmos de planos de corte para em cada nó de sua árvore de enumeração. % NOTE: COPIA
-	Assim sendo, antes de efeturamos o \emph{Branching} de um determinado nó, tentamos fortalecer os limites duais através de planos de corte. 
+	Para fortalecermos ainda mais o algoritmo \emph{Branch-and-Bound}, é possível utilizarmos de algoritmos de planos de corte em cada nó de sua árvore de enumeração. {\color{red} Dessa forma pode-se fortalecer a formulação do problema através da adição de informações especialista antes de efetuar o \emph{Branching} de um determinado nó. Isso faz com que se gaste mais tempo em cada nó, na esperança de que isso diminua o número de nós explorados e o tempo total de utilização da CPU.}
 	
-	Ao invés de reotirmizarmos rapidamente em cada nó, a ideia consiste em gastar mais tempo em cada nó, na esperança de haver um ganho global, possivelmente, em número de nós explorardos e em tempo de CPU. % END COPIA
-	
-	Como desiqualdades válidas para o \textsc{problema de empacotamente de conjuntos}, utilizamos desigualdades de cliques geradas a partir de um grafo conflito. Este grafo é definido da seguinte forma: cada lance no problema de leilões combinatórios define um vértice do grafo, enquanto as arestas são definidas da seguinte forma: se dois lances selecionam um mesmo produto, existe uma aresta entre os mesmos. 
+	Como desigualdades válidas para o PEC, utilizamos desigualdades de cliques geradas a partir de um grafo conflito. Este grafo é definido da seguinte forma: cada lance no problema de leilões combinatórios define um vértice do grafo,
+	{\color{red} e dois vértices possuem aresta entre si se ambos os lances selecionam um mesmo produto. Como quaisquer lances conectados selecionam pelo menos um produto em comum, no máximo um lance de cada clique pode ser selecionado para uma solução viável.}
 	
 	\todo[inline]{Descrição do algoritmo (pseudo-código do que implementamos).}
 	
