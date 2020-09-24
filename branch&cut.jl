@@ -85,12 +85,12 @@ function callbacks(cb_data, cb_where)
     # end
     if cb_where == CB_MIPNODE
         eps = 0.0001
-        println("**** Novo nó! ****");
-        println("Nó: ", cbget_mipnode_nodcnt(cb_data, cb_where))
+        #println("**** Novo nó! ****");
+        #println("Nó: ", cbget_mipnode_nodcnt(cb_data, cb_where))
         status = cbget_mipnode_status(cb_data, cb_where)
         if status == 2 #optimal
             x_val = cbget_mipnode_rel(cb_data, cb_where)
-            println(x_val)
+            #println(x_val)
 
             for cliq ∈ out
                 soma = 0

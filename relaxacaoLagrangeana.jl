@@ -1,8 +1,8 @@
 using JuMP, Gurobi, DelimitedFiles
 
 #path = "Instâncias/inst.txt"
-#path = "Instâncias/toy3.txt"
-path = "Instâncias/pb_100rnd0100.dat"
+#path = "Instâncias/toy2.txt"
+path = "Instâncias/pb_200rnd1100.dat"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -48,7 +48,6 @@ function subproblema_lagrangeano(u)
     end
     if maxCl < 0
         x[maxClIdx] = 1
-        println("INTERFERÊNCIA!!")
     end
 
     for i ∈ P
@@ -222,7 +221,7 @@ function lagrangeana()
         if improve >= maxIter/20
             p_i = p_i/2
             improve = 0
-            println("Atualizado pi (k=", k,")")
+            #println("Atualizado pi (k=", k,")")
             
             if p_i < pi_min
                 println("Parando por pi pequeno (iteração ", k, ")")
@@ -257,4 +256,4 @@ function lagrangeana()
 end
 
 
-lagrangeana()
+time = @elapsed (out = lagrangeana())
