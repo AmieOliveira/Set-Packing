@@ -2,7 +2,7 @@ using JuMP, Gurobi, DelimitedFiles
 
 #path = "Instâncias/inst.txt"
 #path = "Instâncias/toy2.txt"
-path = "Instâncias/pb_200rnd1100.dat"
+path = "Instâncias/pbp_100-50_dens0.100000.txt"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
