@@ -1,11 +1,11 @@
-using Random, DelimitedFiles
+using Printf, Random, DelimitedFiles
 
-nomeBase = "Instâncias/"
+nomeBase = "Instâncias/self_"
 
-m = 20 # Numero de produtos
-n = 10 # Numero de lances (pacotes)
+m = 100 # Numero de produtos
+n = 50 # Numero de lances (pacotes)
 
-maxProducts = Int(m/2)
+maxProducts = 10 #Int(m/2)
 custoBase = 10
 # NOTE: Estou assumindo que todos os produtos tem mesmo valor! (Nao necessariamente e o caso...)
 
@@ -16,10 +16,10 @@ custoBase = 10
 P = 1:m # Conjunto de produtos
 L = 1:n # Conjunto de lances
 
-outFile = ""
+outFile =  @sprintf("%s%i-%i_max%i_base%i.txt", nomeBase, m, n,maxProducts, custoBase)
 
 a = zeros(Int,m,n)
-c = zeros(n)
+c = zeros(1,n)
 
 for j in L
     nProducts = rand(1:maxProducts)
@@ -32,11 +32,7 @@ for j in L
             i = rand(P)
         end
         push!(products,i)
-    end
-    sort!(products)
 
-    cost = 0
-    for i in products
         a[i,j] = 1
 
         add = custoBase*(1 + randn(Float64))
@@ -45,10 +41,29 @@ for j in L
         end
         cost = cost + add
     end
+
     if cost ≤ 0
         cost = nProducts
     end
-    c[j] = Int(cost)
+    c[j] = round(cost)
 
-    #println(products, " -> ", cost)
+    println(sort(products), " -> ", cost)
+end
+
+
+open(outFile, "w") do io
+    writedlm(io, [m n])
+    writedlm(io, c)
+
+    for i in P
+        lances = Int64[]
+        for j in L
+            if a[i,j] == 1
+                push!(lances, j)
+            end
+        end
+        nLances = length(lances)
+        writedlm(io, nLances)
+        writedlm(io, reshape(lances, 1, nLances))
+    end
 end
