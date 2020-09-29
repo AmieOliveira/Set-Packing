@@ -18,7 +18,6 @@
 \usepackage{hyperref}
 
 
-
 % TODO: Apagar
 \usepackage[colorinlistoftodos, color=yellow]{todonotes}
 
@@ -32,6 +31,7 @@
      \floatname{algorithm}{Algoritmo}%
   }
   {\end{algorithm}}
+  
 
 \algnewcommand{\algorithmicand}{\textbf{ and }}
 \algnewcommand{\algorithmicor}{\textbf{ or }}
@@ -90,15 +90,13 @@
 	
 	Este problema possui muita aplicação prática e uma das mais conhecidas é a de Leilões Combinatórias que é abordagem que fazemos neste trabalho. Um leilão combinatório consiste em distribuir um número $m$ de produtos através de $n$ lances. Se um lance é escolhido, um determinado lucro é obtido. O objetivo em um leilão combinatório é maximizar o lucro total respeitando a condição de que cada produto só pode estar contido em no máximo um lance. Utilizando esta aplicação do PEC, utilizamos três métodos exatos para resolver o problema: uma \textbf{Relaxação Lagrangeana}, um algoritmo \emph{\textbf{Branch-and-Bound}} e um segundo algoritmo \emph{\textbf{Branch-and-Bound}} com algoritmos de planos de corte associados ao mesmo, denominado \emph{\textbf{Branch-and-Cut}}.
 	
-	Esse texto está organizado da seguinte forma: na seção~\ref{sec:prob}, detalhamos o \textsc{Problema de Empacotamento de Conjuntos}, e nas seções \ref{sec:relag}, \ref{sec:BB} e~\ref{sec:BC} descrevemos um pouco cada método aplicado. Nas seções~\ref{sec:res} e~\ref{sec:disc} exibimos os resultados obtidos e a comparação entre os métodos e, por fim, na seção~\ref{sec:concl} nossas conclusões e ideias para trabalhos futuros.
-	
+	Esse texto está organizado da seguinte forma: na seção~\ref{sec:prob}, detalhamos o \textsc{Problema de Empacotamento de Conjuntos}, e nas seções \ref{sec:relag}, \ref{sec:BB} e~\ref{sec:BC} descrevemos um pouco cada método aplicado. Na seção~\ref{sec:res} exibimos os resultados obtidos e a comparação entre os métodos e, por fim, na seção~\ref{sec:concl} nossas conclusões e ideias para trabalhos futuros.
 	
 	\section{O Problema de Empacotamento de Conjuntos}\label{sec:prob}
 	O \textsc{problema de empacotamento de conjuntos} (PEC) (do inglês, \emph{Set-Packing Problem}) foi um dos 21 problemas enunciados por Karp em \cite{Karp}. Neste mesmo trabalho, Karp mostrou que se trata de um problema \NP-completo através de uma redução feita do problema da clique máxima de um grafo. O PEC também possui forte relação com o problema da cobertura de conjuntos, estes formando um par dual-forte.
 	
-	O PEC pode ser descrito pelo ponto de vista da decisão, que consiste em determinar, dado um inteiro $k$, se existe um conjunto com $k$ subconjuntos do conjunto de subconjuntos viáveis $I_j$.
-	Porém neste trabalho abordamos a versão de otimização, cuja descrição formal é dada da seguinte forma:
-	
+	A descrição formal do PEC, como um problema de otimização, é dada da seguinte forma:
+
 	\begin{itemize}
 	    \item[-] $I$ = \{1, ..., m\}: conjunto finito de elementos
 	    
@@ -114,7 +112,7 @@
 	\end{itemize}
 	
 	
-	Dadas estas definições, sua formulação como um problema de programação inteira está dada pela equação \ref{eq:PEC-prof}.
+	Dadas estas definições, sua formulação como um problema de programação inteira é dada pela equação \ref{eq:PEC-prof}.
 	
 	\begin{equation}
 		\label{eq:PEC-prof}
@@ -126,14 +124,14 @@
     \end{equation}
     
 	Este problema possui uma ampla aplicação prática. Como um exemplo destas, temos o escalonamento de tripulações de companhias aéreas para aviões. Cada avião da frota precisa ter uma tripulação designada a ele, composta por um piloto, copiloto e navegador~\cite{Airline}.    
-    Como mencionado anteriormente, a abordagem que fazemos aqui ao \textsc{problema de empacotamento de conjuntos} é feita no contexto dos leilões combinatórios, que é objeto de estudo de muitos estudiosos em diversos trabalhos (\cite{Winner}, \cite{Taming}, \cite{CABOB}). Nesta aplicação os conjuntos $I$ e $J$ podem ser enxergados como um conjunto de $m$ produtos e um conjunto de $n$ lances, respectivamente. Nosso objetivo então é maximizar o lucro total obtido sem violar a restrição de que um produto só pode ser escolhido por, no máximo, um lance. E este lucro é um valor associado a seleção de cada lance. 
+    Como mencionado anteriormente, a abordagem que fazemos aqui ao \textsc{problema de empacotamento de conjuntos} é feita no contexto dos leilões combinatórios, que é objeto de estudo de muitos pesquisadores em diversos trabalhos (\cite{Winner}, \cite{Taming}, \cite{CABOB}). Nesta aplicação os conjuntos $I$ e $J$ podem ser enxergados como um conjunto de $m$ produtos e um conjunto de $n$ lances, respectivamente. Nosso objetivo então é maximizar o lucro total obtido sem violar a restrição de que um produto só pode ser escolhido por, no máximo, um lance. E este lucro é um valor associado a seleção de cada lance. 
     Para a solução desse problema implementamos uma formulação alternativa, dada pela equação \ref{eq:PEC}, onde $ a_{ij} $ vale $ 1 $ se o lance $ j $ seleciona o produto $ i $, ou $ 0 $ caso contrário.
     
     \begin{equation}
     	\label{eq:PEC}
     	\begin{array}{ll@{}ll}
-    		\text{max}  & \displaystyle\sum\limits_{j = 0}^{n} c_{j} & x_{j} &\\
-    		\text{sujeito a}& \displaystyle\sum\limits_{j = 0}^{n}   & a_{ij}x_{j} \leq 1,  & i=1,\cdots,m\\
+    		\text{max}  & \displaystyle\sum\limits_{j = 1}^{n} c_{j} & x_{j} &\\
+    		\text{sujeito a}& \displaystyle\sum\limits_{j = 1}^{n}   & a_{ij}x_{j} \leq 1,  & i=1,\cdots,m\\
     		&                                                &x_{j} \in \{0,1\}, & j = 1,\cdots,n
     	\end{array}
     \end{equation}
@@ -146,7 +144,8 @@
 	Chamamos de restrições \enquote{inconvenientes} aquelas que fazem com que o problema se torne difícil de resolver. Dessa forma tais restrições são
 	retiradas do problema de programação inteira e adicionadas à função objetivo em um termo $u(d - Dx)$. Estas variáveis $u_i$ são denominadas variáveis duais ou multiplicadores de Lagrange.
 	
-	Nem sempre a relaxação lagrangeana nos oferece uma solução ótima para o problema. Ela é limitada pelos resultados da relaxação linear. O segundo grupo de restrições, as \enquote{convenientes} tornam o problema mais fácil de ser resolvido e eventualmente podemos obter a solução ótima para o problema original através da relaxação.
+	Nem sempre a relaxação lagrangeana nos oferece uma solução ótima para o problema. Ela é limitada pelos resultados da relaxação linear. Entretanto mesmo quando não chega-se ao valor ótimo a relaxação trás informações úteis para a resolução do problema, e implementações utilizando heurísticas lagrangeanas muitas vezes levam a algoritmos mais eficientes de otimização de um problema (como por exemplo é apresentado em \cite{guo2005using}). 
+	O segundo grupo de restrições, as \enquote{convenientes} tornam o problema mais fácil de ser resolvido e eventualmente podemos obter a solução ótima para o problema original através da relaxação ou, se não for o caso, limitantes superior e inferior para fortalecer o problema. \todo{Conferir. Inserir mais alguma coisa?}
 	
 	O ponto de partida para a aplicação deste método é a elaboração do subproblema lagrangeano. Baseado no modelo de programação inteira que apresentamos na seção~\ref{sec:prob}, o subproblema lagrangeano para o PEC é: 
 	
@@ -172,10 +171,14 @@
     %     \end{algorithmic}
     % \end{algorithm} 
 	
-	O algoritmo abaixo em conjunto com uma heurística gulosa para obtenção de limites inferiores resumem a abordagem adotada para o PEC utilizando o método da relaxação Lagrangeana. A obtenção de limites inferiores consiste em ordenar o conjunto de lances e e selecionar o que apresenta o maior valor calculado pela razão do custo lagrangeano daquele lance em questão pelo número de produtos que o lance cobre. Os resultados obtidos serão exibidos na seção~\ref{sec:res}.
+	Primeiramente, para obtenção de limitantes superiores, utilizamos a seguinte convençâo: uma variável $x_j$ é igual a $1$, quando $(c_{j} - \displaystyle\sum\limits_{i \in I_j} u_{j}) > 0$ e $x_j$ é igual a $0$, caso contrário. Além disso, caso todos os custos $(c_{j} - \displaystyle\sum\limits_{i \in I_j} u_{j})$ sejam negativos, forçamos o maior dentre esses custos negativos para receber valor $1$.
+	
+	O algoritmo \ref{alg:PEC_RL} em conjunto com uma heurística gulosa para obtenção de limites inferiores resumem a abordagem adotada para o PEC utilizando o método da relaxação Lagrangeana. A obtenção de limites inferiores consiste em ordenar o conjunto de lances e selecionar o que apresenta o maior valor calculado pela razão do custo lagrangeano daquele lance em questão, pelo número de produtos que o lance cobre. Os resultados obtidos serão exibidos na seção~\ref{sec:res}.
+	
 	
 	\begin{algoritmo}[H]
-    \caption{Subgradiente para o problema de empacotamento de conjuntos}
+    \caption{Método do Subgradiente para o PEC}
+	\label{alg:PEC_RL}
         \begin{algorithmic}[1]
             \Statex {\color{gray}\it Variáveis:}
             \State MaxIter $=$ Número máximo de iterações definido
@@ -214,8 +217,13 @@
             %\State \EndIf
             %\State \EndIf
             %\underline{}
-            
+            \algstore{algrel}
+        \end{algorithmic}
+    \end{algoritmo}
     
+    \begin{algoritmo}[h]
+        \begin{algorithmic}[1]
+           \algrestore{algrel}
             \Statex
             \Statex \qquad {\color{gray}\it Atualização dos multiplicadores de Lagrange: }
             \State \indent \textbf{for}{ cada produto $i$} \textbf{do}
@@ -236,20 +244,28 @@
             %\State Retornar para a linha 5
         \end{algorithmic}
     \end{algoritmo}
+    
 
-	
 	\section{Branch and Bound}\label{sec:BB}
 	Uma técnica muito aplicada para resolução de problemas combinatórios é a técnica de dividir e conquistar que consiste em resolver subproblemas mais fáceis que o original e após este processo combinar as soluções obtidas até obtermos a solução do problema original. Porém, esta enumeração de subproblemas de forma explícita pode ser muito custosa, e justamente neste contexto, é que algoritmo \emph{Branch-and-Bound} entra em ação.
 	
 	O algoritmo \emph{Branch-and-Bound} consiste em uma técnica de enumeração implícita de soluções, onde através de limites locais, obtemos limites globais. Toda a eficiência e ganho que o algoritmo \emph{Branch-and-Bound} nos oferece é por conta das podas que acontecem na árvore de enumeração implícita, que podem ocorrer por: otimalidade, inviabilidade e limites duais. A técnica foi definida primeiramente em~\cite{Land} por Ailsa Land e Alison Doig em 1960, e figura como um dos mais importantes métodos exatos no contexto de resolução de problemas de otimização até os dias atuais.
 	
 	
-	Para a implementação do método \emph{Branch-and-Bound}, fizemos uso de uma abordagem mais direta, onde o próprio solver já executa o método por padrão. Foram desabilitadas funções como cortes, múltiplas threads, métodos de pré-processamento e afins. Isto foi feito para termos uma noção mais exata do comportamento do método. A partir desta forma de resolver o problema, extraímos algumas informações importantes como: número de nós explorados pela árvore de enumeração e tempo de excução.
+	Para a implementação do método \emph{Branch-and-Bound}, fizemos uso de uma abordagem mais direta, onde o próprio solver do \emph{Gurobi}\,\cite{gurobi} já executa o método por padrão. Foram desabilitadas funções como cortes, múltiplas threads, métodos de pré-processamento e afins, de forma que apenas o método de \emph{Branch-and-Bound} original fosse aplicado para a solução do problema.
+	%Isto foi feito para termos uma noção mais exata do comportamento do método. 
+	%A partir desta forma de resolver o problema, 
+	Resolvendo dessa forma, extraímos algumas informações importantes como o número de nós explorados pela árvore de enumeração e o tempo de execução.
 	
 	
 	
 	\section{Branch and Cut}\label{sec:BC}
-	Para fortalecermos ainda mais o algoritmo \emph{Branch-and-Bound}, é possível utilizarmos de algoritmos de planos de corte em cada nó de sua árvore de enumeração. Dessa forma pode-se fortalecer a formulação do problema através da adição de informações adicionais antes de efetuar o \emph{Branching} de um determinado nó. Isso faz com que se gaste mais tempo em cada nó, na esperança de que isso diminua o número de nós explorados e o tempo total de utilização da CPU.
+	Para fortalecermos algoritmo \emph{Branch-and-Bound}, é possível fazermos uso de algoritmos de planos de corte em cada nó de sua árvore de enumeração.
+	%Dessa forma pode-se fortalecer a formulação do problema através da adição de informações adicionais antes de efetuar o \emph{Branching} de um determinado nó. 
+	Esses algoritmos trazem informações adicionais ao processo de \emph{Branching},
+	%, na esperança de que o aumento da complexidade computacional trazida pelo mesmo
+	%Isso faz 
+	fazendo com que se gaste mais tempo em cada nó, na esperança de que isso diminua o número de nós explorados e o tempo total de utilização da CPU.
 	
 	Como desigualdades válidas para o PEC, utilizamos desigualdades de cliques geradas a partir de um grafo conflito. Este grafo é definido da seguinte forma: cada lance no problema de leilões combinatórios define um vértice do grafo,
 	e dois vértices possuem aresta entre si se ambos os lances selecionam um mesmo produto. Como quaisquer lances conectados selecionam pelo menos um produto em comum, no máximo um lance de cada clique pode ser selecionado para uma solução viável.
@@ -280,11 +296,12 @@
         %\end{algorithmic}
     %\end{algoritmo}
     
-    O algoritmo abaixo é resultante da estratégia descrita no parágrafo anterior. Utilizando o algoritmo de Bron-Kerbosch~\cite{Bron1973}, enumeramos todas as cliques maximais do grafo de conflito e as adicionanos como desigualdades válidas fortes. Utilizando-se desse método, conseguimos diminuir bruscamente o número e nós explorados na árvore de enumeração implícita em diversos casos.
+    O algoritmo \ref{alg:BC} é resultante da estratégia descrita no parágrafo anterior. Utilizando o algoritmo de Bron-Kerbosch~\cite{Bron1973}, enumeramos todas as cliques maximais do grafo de conflito e as adicionamos como desigualdades válidas fortes, quando essas são violadas pelas soluções parciais do \emph{Branch-and-Bound}. Utilizando desse método, conseguimos diminuir bruscamente o número de nós explorados na árvore de enumeração implícita em diversos casos.
     
     
     \begin{algoritmo}[H]
     \caption{Branch and Cut}
+    \label{alg:BC}
         \begin{algorithmic}[1]
             \Statex {\color{gray}\it Variáveis:}
             \State vizinhos = Array[]
@@ -303,6 +320,15 @@
             %\State \EndIf
             %\State \EndFor
             %\State \EndFor
+            
+            \algstore{alg}
+        \end{algorithmic}
+    \end{algoritmo}
+	
+	
+	\begin{algoritmo}[h]
+        \begin{algorithmic}[1] 
+            \algrestore{alg}
             \Statex
             \Statex {\color{gray}\it Algoritmo de Bron-Kerbosch} 
             \State \textbf{function}\textsc{ acharclique}(clique, candidatos, excluidos, output) 
@@ -318,32 +344,28 @@
             \Statex
             \Statex {\color{gray}\it Algoritmo de Corte}
             \State \textbf{function}\textsc{ CORTE}()
-            \State \indent $eps = 0.0001$
-            \State \indent Pega um novo nó
-            \State \indent \textbf{if}{ $status \equiv valor\_otimo$  }\textbf{then}
-            \State \indent $x\_val = valores\_instancia$ 
-            \State \indent \textbf{for}{ $clique \in output$}
-            \State \indent \indent $soma = 0$
-            \State \indent \indent \textbf{for}{ $j \in clique$}
-            \State \indent \indent \indent $soma = soma + x\_val[j]$
-            \State \indent \indent \textbf{if}{ $soma > 1 + eps $ }\textbf{then}
-            \State \indent \indent \indent {\color{gray}\it Restrição violada pela clique}
-            \State \indent \indent \indent $valores = $ Array tamanho de todas cliques encontradas
-            \State \indent \indent \indent Efetuar corte $\forall clique < 1.0+eps$ (violação da restrição)
-            \State \indent \indent \indent $valores = $ Cliques que violaram o corte
-            \State \indent \textbf{ return }{valores}
-            
-            \State 
+            \State \indent $\epsilon = 0.0001$
+            \State \indent $x_{val} = $ Valores encontradas para as variáveis de decisão $x$ no nó atual
+            \State \indent \textbf{for}{ clique maximal do grafo de conflito}
+            \State \indent \indent $ \text{soma} = 0 $
+            \State \indent \indent \textbf{for}{ nó $j \in \text{clique}$}
+            \State \indent \indent \indent $ \text{soma} = \text{soma} + x_{val}_j $
+            \State \indent \indent \textbf{if}{ $ \text{soma} > 1 + eps $ }\textbf{then}
+            \State \indent \indent \indent {\color{gray}\it Restrição violada pela clique. Adicionar corte.}
+            \State \indent \indent \indent Adicionar restrição correspondente à clique atual
         \end{algorithmic}
     \end{algoritmo}
+	\todo{Ajeitar divisão do algoritmo}
 	
 	\section{Resultados}\label{sec:res}
 
 	Ao longo desta seção são comparados os resultados obtidos pelos três métodos implementados -- Relaxação Lagrangeana, \emph{Branch-and-Bound} e \emph{Branch-and-Cut} -- aplicados a diferentes instâncias do problema de leilões combinatórios.
 	
-	Inicialmente os três foram aplicados a um caso base simples, de 3 produtos e 4 lances, apenas para verificar o funcionamento correto das implementações. Em seguida aplicamos os mesmo algoritmos em casos maiores, com o objetivo de avaliar o valor ótimo encontrado para essas instâncias. 
+	Inicialmente os três foram aplicados a um caso base simples, de 3 produtos e 4 lances, para verificar o funcionamento correto das implementações. Em seguida aplicamos os mesmo algoritmos em casos maiores, com o objetivo de avaliar o valor ótimo encontrado para essas instâncias. 
 	
-	Abaixo detalharemos, as informações relevantes, para cada instância utilizada, considerando os resultados obtidos em cada um dos algoritmos executados.
+	Abaixo detalharemos, as informações relevantes de cada instância utilizada, considerando os resultados obtidos para cada um dos algoritmos executados.
+	
+	É feita a ressalva de que os tempos de processamento apresentados foram obtidos para uma rodada de cada algoritmo em máquinas próprias. Portanto, os mesmos não incluem incertezas e estão explicitados apenas para fins de comparação entre diferentes métodos para uma mesma instância.\todo{Conferir}
 	
 		\subsection{Caso Base} \label{sec:caso}
 	    Para fins comparativos com os métodos que foram aplicados para a resolução do \textsc{problema de empacotamento de conjuntos}, utilizamos como instância de teste a chamada \textit{toy2}, com 3 produtos e 4 lances, que pode ser observada na tabela \ref{tab:toy2}.
@@ -360,16 +382,16 @@
 	            \textbf{Valor do lance} & 10 & 12 & 18 & 22 \\\hline
 	        \end{tabular}
 	        \caption{Instância de teste \textit{toy2}. Na tabela principal, a ocorrência de um valor $1$ entre o lance $l_j$ e o produto $p_i$ significa que $p_i$ é selecionado por $l_j$.
-	        A linha de valores especifica o ganho que a seleção de cada lance $l_j$ trás.}
+	        A linha de valores especifica o ganho que a seleção de cada lance $l_j$ traz.}
 	        \label{tab:toy2}
 	    \end{table}
 	    
 	    Esta é uma instância muito simples, criada especificamente para testar o funcionamento adequado dos métodos. É esperado que, para este caso, todos os métodos sempre encontrem o valor ótimo e que nenhum apresente problemas para chegar a essa solução. Neste exemplo, o valor ótimo é $32$, obtido quando se seleciona os lances 1 e 4.
 	    %As observações práticas corresponderam às espectativas. 
 	    
-	    Na prática, todos os três métodos foram capazes de encontrar o valor ótimo. A relaxação lagrangeana o fez em 63 iterações, enquanto o \emph{Branch-and-Bound} e o \emph{Branch-and-Cut} encontraram a solução em 1 iteração simplex. Todos resolvem em menos de $10$~ms.
+	    Na prática, todos os três métodos foram capazes de encontrar o valor ótimo. A relaxação lagrangeana o fez em 63 iterações, enquanto o \emph{Branch-and-Bound} e o \emph{Branch-and-Cut} encontraram a solução em apenas uma iteração do algoritmo simplex. Todos resolvem s instância em menos de $10$~ms.
 	    
-	    Como o problema é muito simples de resolver, ele não foi o suficiente para averiguar as vantagens do algoritmo \emph{Branch-and-Cut}. Isso será feito com instâncias mais complexas que serão vistas ao longo desta seção.
+	    Como o problema é muito simples de resolver, ele não foi o suficiente para averiguar as vantagens do algoritmo \emph{Branch-and-Cut}. Isso foi feito com instâncias mais complexas, apresentadas ao longo desta seção.
 	    
 	    % utilizamos como principal a instância abaixo extraída de~\cite{Elisa}:
 	    % \begin{figure}[H]
@@ -406,34 +428,34 @@
 	   \end{tabular}
 	   }
 	   \caption{Leilão de energia elétrica. Na tabela principal, a ocorrência de um valor $1$ entre o lance $l_j$ e o produto $p_i$ significa que $p_i$ é selecionado por $l_j$.
-	   A linha de valores especifica o ganho que a seleção de cada lance $l_j$ trás.}
+	   A linha de valores especifica o ganho que a seleção de cada lance $l_j$ traz.}
         \label{tab:inst10}
     \end{table}
     
     Este exemplo tem solução ótima com lucro de $ 296{,}65 $, obtido através da seleção dos lances $ l_6 $, $ l_8 $ e $ l_{10} $. Tal resultado foi alcançado pelas técnicas \emph{Branch-and-Bound} e \emph{Branch-and-Cut}. A relaxação lagrangeana, no melhor caso, chegou no valor $ 290{,}75 $ ao rodar o algoritmo por $1.000$ iterações. O algoritmo levou $0{,}20$~s para terminar.
     
-    Uma análise mais profunda mostrou que neste caso o algoritmo da relaxação lagrangeana não consegue solução melhor porque o limitante superior, por ela obtido está limitado pelo valor da relaxação linear, independente da quantidade de iterações executadas no algoritmo, que neste caso é $ 342{,}8 $ (obteve-se $ 342{,}83 $ para o melhor limitante superior por relaxação lagrangeana). É interessante observar que existe uma grande diferença entre o resultado ótimo do problema com variáveis binárias e de sua relaxação linear, mesmo sendo essa uma instância relativamente pequena. 
+    Uma análise mais profunda mostrou que neste caso o algoritmo da relaxação lagrangeana não consegue solução melhor porque o limitante superior, por ela obtido, está limitado pelo valor da relaxação linear, independente da quantidade de iterações executadas no algoritmo, que neste caso é $ 342{,}8 $ (obteve-se $ 342{,}83 $ para o melhor limitante superior por relaxação lagrangeana). É interessante observar que existe uma grande diferença entre o resultado ótimo do problema com variáveis binárias e de sua relaxação linear, mesmo sendo essa uma instância relativamente pequena. 
     
-    \begin{table}[h]
-	        \centering
-	        \resizebox{\textwidth}{!}{
-	        \begin{tabular}{|c|c|c|c|c|c|c|}
-	            \cline{2-7}
-	            \multicolumn{1}{c|}{ } &  \multicolumn{2}{c|}{Relaxação Lagrangeana} & \multicolumn{2}{c|}{Branch \& Bound} & \multicolumn{2}{c|}{Branch \& Cut}\\\hline
-	            \multicolumn{1}{|c|}{ } & Melhor Solução &  Tempo Execução & Nós explorados &  Tempo Execução & Nós explorados &  Tempo Execução \\\hline
-	            Caso base & & & & & &  \\\hline
-	            Leilões (10x10) & $ 290{,}75 $ & $0{,}1998$ & $7$ & $0{,}02$ & $3$ & $0{,}01$ \\\hline
-	            Benchmark (500x100) - PV & $347{,}00$ & $0{,}41$ & $1036$ & $0{,}51$ & $95$ & $0{,}31$ \\\hline
-	            Benchmark (500x100) - PU & $32{,}00$ & $0{,}26$ & $1148$ & $0{,}31$ & $35$ & $0{,}14$ \\\hline
+    % \begin{table}[h]
+	%         \centering
+	%         \resizebox{\textwidth}{!}{
+	%         \begin{tabular}{|c|c|c|c|c|c|c|}
+	%             \cline{2-7}
+	%             \multicolumn{1}{c|}{ } &  \multicolumn{2}{c|}{Relaxação Lagrangeana} & \multicolumn{2}{c|}{Branch \& Bound} & \multicolumn{2}{c|}{Branch \& Cut}\\\hline
+	%             \multicolumn{1}{|c|}{ } & Melhor Solução &  Tempo Execução & Nós explorados & Tempo Execução & Nós explorados &  Tempo Execução \\\hline
+	%             Caso base & & & & & &  \\\hline
+	%             Leilões (10x10) & $ 290{,}75 $ & $0{,}1998$ & $7$ & $0{,}02$ & $3$ & $0{,}01$ \\\hline
+	%             Benchmark (500x100) - PV & $347{,}00$ & $0{,}41$ & $1036$ & $0{,}51$ & $95$ & $0{,}31$ \\\hline
+	%             Benchmark (500x100) - PU & $32{,}00$ & $0{,}26$ & $1148$ & $0{,}31$ & $35$ & $0{,}14$ \\\hline
 	            %Branch \& Bound & $ 296{,}65 $ & $0{,}02$\\\hline
 	            %Branch \& Cut & $ 296{,}65 $ & $0{,}01$ \\\hline
-	        \end{tabular}
-	        } 
-	        \caption{Tempo de execução é calculado em segundos. Escrever aqui...}
-	        \label{tab:tempos}
-	    \end{table}
+	%         \end{tabular}
+	%         } 
+	%         \caption{Tempo de execução é calculado em segundos. Escrever aqui...}
+	%         \label{tab:tempos}
+	% \end{table}
     
-    Pode-se observar a resolução pelo método \emph{Branch-and-Bound} clássico resultou na análise de 7 nós da árvore induzida, levando um total de $0{,}02$~s, enquanto o \emph{Branch-and-Cut}, com a adição dos planos de corte, só precisou analisar 3 nós para encontrar a solução ótima, durando $0{,}01$~s. 
+    A resolução pelo método \emph{Branch-and-Bound} clássico resultou na análise de 7 nós da árvore enumeração, levando um total de $0{,}02$~s, enquanto o \emph{Branch-and-Cut}, com a adição dos planos de corte, só precisou analisar 3 nós para encontrar a solução ótima, durando $0{,}01$~s. 
     
     O grafo de conflito desta instância, apresentado na figura \ref{fig:instance}, apresenta 6 cliques maximais: $\{1, 2, 8, 9\}$, $\{1, 3, 8, 9\}$, $\{2, 6\}$, $\{3, 7, 8, 9\}$, $\{4, 5, 10\}$ e $\{6, 7\}$.
     Durante a execução do algoritmo \emph{Branch-and-Cut} foi aplicando um corte, dado pela clique $\{ 1, 3, 8, 9 \}$, que foi violada na análise de um dos nós do \emph{Branch-and-Bound}.
@@ -445,18 +467,27 @@
          \label{fig:instance}
     \end{figure} 
 
+
+
     \subsection{Instâncias de referência}
     
-    Para analisar melhor as propriedades dos métodos implementados, \todo{Especialmente do Branch-and-Cut?}
+    Para analisar melhor as propriedades dos métodos implementados,
     foram selecionadas instâncias do PEC com grande número de produtos e lances. Com muitas variáveis e restrições o problema se torna mais difícil e é necessário um maior esforço por parte dos métodos.
     
-    As instâncias aqui utilizadas foram extraídas da fonte \cite{benchmarks}, que contém um conjunto de \emph{Benchmarks} para o PEC. Os resultados para cada uma das instâncias escolhidas pode ser observado a seguir. \todo{Conferir \\ Possivelmente podemos colocar uma tabela com os resultados aqui no geral? Ou talvez nao seja melhor colocar resultados das instâncias antes das próprias instâncias.. Talvez só colocar uma tabela com as características das instâncias escolhidas, parecido com o que tem no site}
+    As instâncias aqui utilizadas foram extraídas da fonte \cite{benchmarks}, que contém um conjunto de \emph{Benchmarks} para o PEC. Foram escolhidos três exemplos: 
+    \begin{itemize}
+        \item \enquote{pb\_100rnd0100.dat}: 500 produtos, 100 lances e cada produto é coberto por dois lances. Os preços de cada lance variam entre 1 e 20.
+        \item \enquote{pb\_100rnd0200.dat}: 500 produtos, 100 lances e cada produto é coberto por dois lances. Todo lance tem ovalor unitário.
+        \item \enquote{pb\_100rnd0500.dat}: 100 produtos, 100 lances e cada produto é coberto por dois lances. Os preços de cada lance variam entre 1 e 20.
+    \end{itemize}
+    
+    Os resultados para cada uma das instâncias escolhidas pode ser observado a seguir. 
+    %Possivelmente podemos colocar uma tabela com os resultados aqui no geral? Ou talvez nao seja melhor colocar resultados das instâncias antes das próprias instâncias.. Talvez só colocar uma tabela com as características das instâncias escolhidas, parecido com o que tem no site
     %O primeiro exemplo utilizado, na seção \ref{sec:res:ssec:bchmrk1}, possui valores de lances variados
     
     
     \subsubsection{Benchmark 500 x 100 - Pesos variáveis}% - 2 produtos por lance, Preços variados}
     \label{sec:res:ssec:bchmrk1}
-    \todo[inline]{Rever esse título. Provavelmente o que queremos colocar aqui vai depender das outras instâncias que a gente utilizar}
     
     Este primeiro \emph{benchmark} corresponde à instância \enquote{pb\_100rnd0100.dat}, na qual tem-se 500 produtos e 100 lances. Os preços de cada lance são variados, podendo valer de 1 a 20, e cada produto é coberto por dois lances. O valor ótimo dessa instância é $372$.
     
@@ -476,12 +507,12 @@
     
     
     \subsubsection{Benchmark 100 x 100 - Pesos Variáveis}
-    \todo[inline]{Verificar se vamos tirar este}
-    O terceiro \emph{benchmark} corresponde à instância \enquote{pb\_100rnd0500.dat}, na qual o número de produtos e lances é igual, ambos com cardinalidade 100. A variação ds preços de cada lance está contida na mesma faixa da instãncia anterior, podendo valer de 1 a 20, e cada produto também é coberto por dois lances. O valor ótimo dessa instância é $639$.
+    O terceiro \emph{benchmark} corresponde à instância \enquote{pb\_100rnd0500.dat}, na qual o número de produtos e lances é igual, ambos com cardinalidade 100. A variação dos preços de cada lance está contida na mesma faixa da instãncia anterior, podendo valer de 1 a 20, e cada produto também é coberto por dois lances. O valor ótimo dessa instância é $639$.
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    Entretando, a resolução da instância pelos métodos \emph{Branch-and-Bound} e \emph{Branch-and Cut} se mostrou bem imediata. Ambos realizaram o procedimento em tempo muito pequeno e sem explorar nenhum nó da árvore de enumeração.O \emph{Branch-and-Bound}, mais especificamente obteve valor ótimo de $639$ em $ 0{,}01 $~s, enquanto o \emph{Branch-and-Cut} a obteve em tempo inferior a este. Porém, foram adicionados 31 planos de corte no \emph{Branch-and-Cut} e isto tomou $ 0{,}03 $~s, o que demonstrou um tempo total superior ao do \emph{Branch-and-Bound}, o tornando assim, o método mais eficiente para esta instância.
+    Entretando, a resolução da instância pelos métodos \emph{Branch-and-Bound} e \emph{Branch-and Cut} se mostrou bem imediata. Ambos realizaram o procedimento em tempo muito pequeno e sem explorar nenhum nó da árvore de enumeração, levando em torno de $ 0{,}01 $~s para encontrar o ótimo. Entretando houve um tempo de preprocessamento utilizado para gerar o grafo de conflito e extrair os cliques maximais, que nesse caso não tiveram qualquer utilidade.
+    %O  \emph{Branch-and-Bound}, mais especificamente obteve valor ótimo de $639$ em $ 0{,}01 $~s, enquanto o \emph{Branch-and-Cut} a obteve em tempo inferior a este.  %Porém, foram adicionados 31 planos de corte no \emph{Branch-and-Cut} e isto tomou $ 0{,}03 $~s, o que demonstrou um tempo total superior ao do \emph{Branch-and-Bound}, o tornando assim, o método mais eficiente para esta instância.
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -490,74 +521,51 @@
     
     
     \subsection{Instâncias PBP}
-    \todo{Trocar título. Descrever instâncias e resultados}
     
     As instâncias avaliadas a seguir foram criadas de acordo com o gerador de conjuntos PBP (\emph{Price Proportional Bid}), descrito em \cite{guo2005using}\footnote{
     Código descrito foi reproduzido no arquivo \enquote{gerador\_pbp.jl}}.
     Os conjuntos de teste PBP geram amostras nas quais o preço de um lance é relacionado à quantidade e qualidade dos produtos que ele cobre, e ao mesmo tempo o preço de um produto é aproximadamente proporcional ao número de lances pelos quais ele é coberto. Isso é um padrão observado em problemas reais de leilões combinatórios que o gerador de conjunto de testes tenta reproduzir.
     
-    \todo[inline]{Especificar quais instâncias vão ser usadas...?}
-    
+    São apresentadas a seguir duas instâncias:
+    \begin{itemize}
+        \item \enquote{pbp\_100-50\_dens0.100000.txt}: 100 produtos, 50 lances. Cada lance tem $10\%$ de chance de selecionar um dado produto.
+        \item \enquote{pbp\_50-50\_dens0.200000.txt}: 50 produtos, 50 lances. Cada lance tem $20\%$ de chance de selecionar um dado produto.
+    \end{itemize}
     
     \subsubsection{PBP 100 x 50 - Densidade 0,1}
     
     Nesta instância é apresentado um caso com 100 produtos e 50 lances, com densidade de $0{,}1$. O parâmetro de densidade diz respeito à probabilidade de um produto ser coberto por um determinado lance (ou, similarmente, de um lance cobrir um produto). A instância gerada foi chamada \enquote{pbp\_100-50\_dens0.100000.txt}.
     
-    Ambos o \emph{Branch-and-Bound} e o \emph{Branch-and-Cut} foram capazes de encontrar o valor ótimo de $285{,}811$. O \emph{Branch-and-Bound} encontrou a solução explorando $79$ nós, e durou em torno de $0{,}06$~s. 
+    Ambos \emph{Branch-and-Bound} e \emph{Branch-and-Cut} foram capazes de encontrar o valor ótimo de $285{,}811$. O \emph{Branch-and-Bound} encontrou a solução explorando $79$ nós, e durou em torno de $0{,}06$~s. 
     
-    Nesta instância observou-se que a adição do algoritmo de planos de corte não gerou ganho no algortimo de otimização. Pelo contrário, embora acabe explorando apenas $18$ nós, ele levou $2{,}41$~s para rodar, sendo aproximadamente 40 vezes mais lento. Isso ocorre porque há a adição de planos de corte demais para a magnitude do problema, um total de 382 plaos. Esta instância demonstra que possivelmente seria vantajoso para este problema alterar o algoritmo de planos de corte de forma que o mesmo adicione apenas a restrição mais violada ao invés de todas as restrições violadas toda vez que o mesmo é chamado.
+    Nesta instância observou-se que a adição do algoritmo de planos de corte não gerou ganho no algortimo de otimização. Pelo contrário, embora acabe explorando apenas $18$ nós, ele levou $2{,}41$~s para rodar, sendo aproximadamente 40 vezes mais lento. Isso ocorre porque há a adição de planos de corte demais para a magnitude do problema, um total de 382 planos. Esta instância demonstra que possivelmente seria vantajoso para este problema alterar o algoritmo de planos de corte de forma que o mesmo adicione apenas a restrição mais violada ao invés de todas as restrições violadas toda vez que o mesmo é chamado.
     
+    Por fim, o algoritmo de relaxação lagrangeana ainda não é capaz, por si só, de encontrar o valor ótimo, obtendo melhor solução $256{,}996$. O mesmo rodou por $1.000$ iterações, obtendo melhor limite superior de $421{,}576$.
+
+
     
+    \subsubsection{PBP 50 x 50 - Densidade 0,2}
     
-    \todo[inline]{Caso 1: pbp_100-50_dens0.100000.txt
+    %\todo[inline]{Nota: Embora o BC apresente menor tempo do algorimto de otimizacao em si, nos casos apresentados, em diversas instâncias o tempo que leva para calcular os cliques do diagrama de conflito nao compensa... => NESTE CASO NÃO CONSEGUIU TERMINAR O ALGORIMTO DE ACHAR TODOS OS CLIQUES EM MEIA HORA}
     
-    BB:
+    A segunda instância apresenta um caso com 50 produtos e 50 lances, com densidade $0{,}2$. O parâmetro de densidade indica que um determinado produto qualquer tem $20\%$ de chance de ser coberto por um dado lance (e ao mesmo tempo um lance tem $20\%$ de chance de cobrir um dado produto). A instância em questão foi chamada \enquote{pbp\_50-50\_dens0.200000.txt}.
     
-    Explored 79 nodes (1137 simplex iterations) in 0.07 seconds
-Thread count was 1 (of 4 available processors)
-
-Solution count 4: 285.811 280.434 247.246 245.045 
-
-Optimal solution found (tolerance 1.00e-04)
-Best objective 2.858113017420e+02, best bound 2.858113017420e+02, gap 0.0000\%
-
-Segunda vez: 0.04 seconds
-
-
-—————————
-
-RL:
-
-(256.9960733636211, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-
-k_best: 965
-Novo z\_up: 421.5758728771783
-6.552909452
-
-
-—————————
-
-BC:
-
-Cutting planes:
-  User: 382
-
-Explored 18 nodes (783 simplex iterations) in 2.41 seconds
-Thread count was 4 (of 4 available processors)
-
-Solution count 2: 285.811 280.434 
-
-Optimal solution found (tolerance 1.00e-04)
-Best objective 2.858113017420e+02, best bound 2.858113017420e+02, gap 0.0000\%
-
-User-callback calls 92, time in user-callback 2.42 sec
+    Nesta instância o \emph{Branch-and-Bound} foi capaz de encontrar o valor ótimo de $313{,}575$. Ele explorou 81 nós e levou $0{,}06$~s. 
     
-    }
+    A relaxação lagrangeana levou $5{,}15$~s para terminar por ter atingido o número máximo de iterações. É interessante obervar que este método foi capaz de obter o valor ótimo para esta instância, encontrando $313{,}575$ como melhor limitante inferior. No entanto ele não obtem garantia de otimalidade, e o limite dual lagrangeano mínimo obtido foi de $482{,}159$.
     
-    \todo[inline]{Nota: Embora o BC apresente menor tempo do algorimto de otimizacao em si, nos casos apresentados, em diversas instâncias o tempo que leva para calcular os cliques do diagrama de conflito nao compensa...}
+    Não foi possível \todo{Escrever \enquote{não foi possível}?? Se a gente quisesse mesmo....}
+    obter o resultado pelo método \emph{Branch-and-Cut} para esta instância. O algoritmo de Bron-Kerbosch para encontrar as cliques maximais no grafo de conflito não conseguiu terminar a rotina em $3600$~s, de forma que chegamos à conclusão de que o algoritmo desenvolvido não pode ser eficiente para resolver esta instância. Quando comparado com a ordem de grandeza que os outros algoritmos levam para resolver, esse tempo pode ser considerado infinito e, portanto, inviável.
+    
+    Essa observação é um caso extremo da observação feita durante os testes de que, embora geralmente a adição dos planos de corte pelo \emph{Branch-and-Cut} traga um aumento de eficiência para o \emph{Branch-and-Bound}, esse aumento pode não compensar, uma vez que antes de rodar esse algoritmo mais eficiente existe a necessidade de executar o algoritmo para encontrar os cliques maixmais, o qual corresponde no total a uma perda de eficiência.
+    
     
 	\section{Conclusão}\label{sec:concl}
-	Neste trabalho, abordamos o \textsc{problema de empacotamento de conjuntos} e uma aplicação bem conhecida que são os leliões combinatórios. Resolvemos o problema pelo solver \emph{Gurobi}, a linguagem \emph{Julia} e a biblioteca \emph{JuMP} utilizando três métodos exatos e comparamos os resultados obtidos entre eles. Foram usadas diversos tipos de instâncias: algumas de elaboração própria, uma instância extraída de~\cite{Elisa} e outras retiradas de~\cite{benchmarks}. Observamos que a relaxação lagrangeana nem sempre obtinha o valor ótimo, porém em diversos casos obtemos soluções bem próximas do ótimo. Os métodos \emph{Branch-and-Bound} e \emph{Branch-and-Cut} obtiveram as soluções ótimas em todas as instâncias testadas, de maneira que o segundo se mostrou bem mais eficiente em termos de tempo computacional que o primeiro por conta das desigualdades válidas fortes que extraímos a partir de um grafo conflito elaborado com base na instância em questão.
+	Neste trabalho, abordamos o \textsc{Problema de Empacotamento de Conjuntos} (PEC) e uma aplicação bem conhecida que são os leliões combinatórios. Resolvemos o problema pelo solver \emph{Gurobi}, com a linguagem \emph{Julia}, através da biblioteca \emph{JuMP}. Utilizamos três métodos exatos e comparamos os resultados obtidos entre eles. Foram usadas diversos tipos de instâncias: algumas de elaboração própria, uma instância extraída de~\cite{Elisa}, outras retiradas de~\cite{benchmarks} e instâncias geradas a partir do algoritmo descrito em~\cite{guo2005using}. 
+	
+	Observamos que a relaxação lagrangeana geralmente não obteve o valor ótimo, porém em diversos casos obtemos soluções bem próximas do ótimo. Podemos observar que mesmo quando o ótimo não é obtido, as informções dos limites primal e dual são relevantes, e podem ser utilizados para auxiliar o processo de otimização como um todo. Observamos ao longo dos testes que a relaxação não é o algoritmo mais rápido entre os três, mesmo quando alcança o valor ótimo, entretanto é importante ter em mente que o código desenvolvido para a relaxação lagrangeana não foi ele mesmo otimizado, contendo vários aspectos que diminuem seu desempenho, enquanto o \emph{Branch-and-Bound} e o \emph{Branch-and-Cut}, por usarem o solver \emph{Gurobi}, provavelmente já estão implementados de maneira altamente eficiente.
+	
+	Os métodos \emph{Branch-and-Bound} e \emph{Branch-and-Cut} obtiveram as soluções ótimas na maioria das instâncias testadas, de maneira que o segundo se mostrou bem mais eficiente em termos de tempo computacional que o primeiro, por conta das desigualdades válidas fortes que extraímos a partir de um grafo conflito elaborado com base na instância em questão. Entretanto esse tempo não leva em conta o preprocessamento necessário para extrair o grafo de conflito e as cliques maximais do mesmo, o que pode vir a ser altamente custoso.
 	
 	Como trabalhos futuros, pretendemos refinar os métodos implementados para obter soluções mais próximas da solução ótima nos casos em que a mesma não foi obtida; e através deste refinamento, obter as soluções ótimas em um tempo menor. E ainda, a aplicação de outros métodos para a resolução do problema aqui tratado, incluindo métodos não exatos para tratar instâncias muito maiores.
 	
