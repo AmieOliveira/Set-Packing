@@ -1,8 +1,6 @@
 using JuMP, Gurobi, DelimitedFiles
 
-#path = "Instâncias/inst.txt"
-#path = "Instâncias/toy2.txt"
-path = "Instâncias/pbp_50-50_dens0.050000.txt"
+path = "Instâncias/inst.txt"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -31,6 +29,9 @@ end
 
 
 function subproblema_lagrangeano(u)
+    # Retorna o limitante superior obtido como resultado do subproblema
+    #  lagrangeano, bem como a seleção de lances x utilizadas nessa solução
+
     x = zeros(Int64, n)
     
     z = 0
@@ -56,18 +57,13 @@ function subproblema_lagrangeano(u)
         z = z + u[i]
     end
 
-    # z = sum(c[j]*x[j] for j in L) + sum( u[i]*( 1 - sum(a[i,j]*x[j] for j in L) ) for i in P)
-    # z = sum(c_l[j]*x[j] for j in L) + sum(u[i] for i in P)
-
-    #println("")
-    #println("Resultado da relaxação: ", z, " (", x, ")")
-    #println("Multiplicadores: ", u)
-
     return z, x
 end
 
 function limite_inferior(custos, x_dual=[])
-    # Retorna o z_low e o x_low
+    # Retorna uma solução viável para um problema (e, portanto, um 
+    #  limitante inferior)
+
     x = zeros(n)
 
     # Organizar elementos com relação aos pesos
@@ -120,7 +116,8 @@ function limite_inferior(custos, x_dual=[])
 end
 
 function check(x_up, u)
-    # Retorna uma booleana que diz se x_up e otimo para o PEC
+    # Retorna uma booleana que diz se x_up e otimo para o PEC, 
+    #  segundo as condições de complementariedade-folga
     viavel = true
     for i in P
         if sum(a[i,j]*x_up[j] for j in L) > 1
@@ -159,13 +156,12 @@ function lagrangeana()
     z_l_best = z_low
     x_best = x_low
 
-    limInfType = "default"  # Pode ser "complementares" # NAO TESTADO
+    limInfType = "default"  # Pode ser "complementares", mas isso NAO FOI TESTADO
 
 
     for k ∈ 1:maxIter
         # Resolução do subproblema lagrangeano
         z_u, x_up = subproblema_lagrangeano(u)
-        #println("Limite dual: ", z_u, "(", x_up, ")")
 
         # Verificando se houve melhora
         if z_u < z_u_best
@@ -174,38 +170,34 @@ function lagrangeana()
             k_best = k
             improve = 0
             println("k_best: ", k_best)
-            println("Novo z_up: ", z_u_best)#, " (", x_u_best, ")")
-            #println("Multiplicadores: ", u)
-            #println("Valor de pi: ", p_i)
+            println("Novo z_up: ", z_u_best)
         else
             improve += 1
         end
         
         # Atualizando o limite limite_inferior
-        #if (k%trunc(Int64, maxIter/10) == 0) && (k ≠ 0)
-            custo = zeros(n)
-            x_dual = []
-            if limInfType == "default"
-                for j in L
-                    custo[j] = c[j] - sum(a[i,j]*u[i] for i in P)
-                    custo[j] = custo[j]/(sum(a[i,j] for i in P))
-                end
-            elseif limInfType == "complementares"
-                custo = c
-                for j in L
-                    custo[j] = custo[j]/(sum(a[i,j] for i in P))
-                end
-                x_dual = x_up
+        custo = zeros(n)
+        x_dual = []
+        if limInfType == "default"
+            for j in L
+                custo[j] = c[j] - sum(a[i,j]*u[i] for i in P)
+                custo[j] = custo[j]/(sum(a[i,j] for i in P))
             end
-            z_low, x_low = limite_inferior(custo, x_dual)
+        elseif limInfType == "complementares"
+            custo = c
+            for j in L
+                custo[j] = custo[j]/(sum(a[i,j] for i in P))
+            end
+            x_dual = x_up
+        end
+        z_low, x_low = limite_inferior(custo, x_dual)
 
-            # Verificando se houve melhora
-            if z_low > z_l_best
-                z_l_best = z_low
-                x_best = x_low # NOTE: Prestar atencao, pq se x_up mudar x_best tb vai mudar
-                println("Atualizado z_low: ", z_l_best, " - iteração ", k)#, " (", x_best, ")")
-            end
-        #end
+        # Verificando se houve melhora
+        if z_low > z_l_best
+            z_l_best = z_low
+            x_best = x_low 
+            println("Atualizado z_low: ", z_l_best, " - iteração ", k)
+        end
 
         # Condições de otimalidade
         if z_u_best - z_l_best < 1
@@ -223,7 +215,6 @@ function lagrangeana()
         if improve >= maxIter/20
             p_i = p_i/2
             improve = 0
-            #println("Atualizado pi (k=", k,")")
             
             if p_i < pi_min
                 println("Parando por pi pequeno (iteração ", k, ")")
@@ -245,17 +236,15 @@ function lagrangeana()
         end
 
         for i in P
-            u[i] = max(0, u[i] - t*s[i]) # NOTE: Verificar!!! Se for a direcao oposta a de melhora mesmo, tem que ser menos
+            u[i] = max(0, u[i] - t*s[i])
         end
-
-        #println("Novos multiplicadores: ", u)
-        #println(s)
-        #println("")
-
     end
 
-    return z_l_best, x_best#, z_u_best
+    return z_l_best, x_best
 end
 
 
 time = @elapsed (out = lagrangeana())
+
+println("Melhor resultado: ", out)
+println("Tempo levado: ", time)

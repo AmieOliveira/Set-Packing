@@ -1,7 +1,6 @@
 using JuMP, Gurobi, DelimitedFiles, MathProgBase
 
-#path = "Instâncias/inst.txt"
-path = "Instâncias/pb_100rnd0100.dat"
+path = "Instâncias/inst.txt"
 
 m = readdlm(path)[1,1] # Numero de produtos
 n = readdlm(path)[1,2] # Numero de lances (pacotes)
@@ -26,7 +25,7 @@ for i in P
     end
 end
 
-neighbors = Array{Int64}[] #Array{Array{Int64}, n} #Array{Array{Int64}}([],1,4)
+neighbors = Array{Int64}[]
 for j in L
     ngs = Int64[]
     for i in P
@@ -40,7 +39,6 @@ for j in L
             end
         end
     end
-    #println(ngs)
     append!(neighbors, [ngs])
 end
 
@@ -50,17 +48,15 @@ function find_cliques(clique, candidatos, excluidos, output)
         push!(output, clique)
         return
     end
-    # TODO: pivô
-    for v ∈ candidatos[:] #candidatos
+
+    for v ∈ candidatos[:]
         R2 = clique ∪ [v]
         P2 = candidatos ∩ neighbors[v]
         X2 = excluidos ∩ neighbors[v]
         find_cliques(R2, P2, X2, output)
         
         filter!(e->e!=v, candidatos)
-        # NOTE: se fosse iterar encima da propria lista candidatos, teria que alterar desta forma:
-        #candidatos = filter(e->e!=v, candidatos) 
-        # Nao altera a lista original, então não estraga os elementos da iteração
+        
         excluidos = excluidos ∪ [v]
     end
 end
@@ -80,17 +76,13 @@ println(out)
 
 # Algoritmo de corte
 function callbacks(cb_data, cb_where)
-    # if cb_where ≠ CB_MESSAGE    # Não está imprimindo mensagem de log
-    #     println("ONDE ESTOU: ", cb_where)
-    # end
     if cb_where == CB_MIPNODE
+
         eps = 0.0001
-        #println("**** Novo nó! ****");
-        #println("Nó: ", cbget_mipnode_nodcnt(cb_data, cb_where))
         status = cbget_mipnode_status(cb_data, cb_where)
+
         if status == 2 #optimal
             x_val = cbget_mipnode_rel(cb_data, cb_where)
-            #println(x_val)
 
             for cliq ∈ out
                 soma = 0
@@ -98,7 +90,8 @@ function callbacks(cb_data, cb_where)
                     soma += x_val[j]
                 end
                 if soma > 1 + eps
-                    # Essa restrição foi violada
+                    # Essa restrição foi violada, logo é adicionada 
+                    #  como plano de corte
                     println("Restrição violada!! Clique: ", cliq)
                     val = ones(length(cliq))
                     cbcut(cb_data, cliq, val, '<', 1.0+eps)

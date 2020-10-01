@@ -42,9 +42,9 @@ end
 # Características do conjunto de dados
 nomeBase = "Instâncias/pbp_"
 
-m = 100 # Numero de produtos
+m = 50 # Numero de produtos
 n = 50 # Numero de lances (pacotes)
-d = 0.1 # Densidade de probabilidade de um lance cobrir um produto 
+d = 0.2 # Densidade de probabilidade de um lance cobrir um produto 
 
 # Criando e salvando o conjunto
 a, c = PBP_testset(m, n, d)
@@ -66,6 +66,10 @@ open(outFile, "w") do io
         end
         nLances = length(lances)
         writedlm(io, nLances)
-        writedlm(io, reshape(lances, 1, nLances))
+        if nLances > 0
+            writedlm(io, reshape(lances, 1, nLances))
+        else
+            writedlm(io, " ")
+        end
     end
 end
